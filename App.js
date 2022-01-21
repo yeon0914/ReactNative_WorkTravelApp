@@ -1,8 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
+import { Fontisto } from "@expo/vector-icons";
 
 const STORAGE_KEY = "@toDos"
 
@@ -31,11 +32,22 @@ export default function App() {
   }
   const loadToDos = async (toSave) => {
     try {
-        const s = await AsyncStorage.getItem(STORAGE_KEY);
+      const s = await AsyncStorage.getItem(STORAGE_KEY);
       s !== null ? setToDos(JSON.parse(s)) : null;
     } catch (e) {
       //saving error
     }
+  }
+  const deleteToDo = async (key) => {
+    Alert.alert("Delete To Do?", "Are you sure?", [{ text: "Cancel" }, {
+      text: "I'm Sure", style: "destructive", onPress: async() => {
+        const newToDos = { ...toDos };
+        delete newToDos[key];
+        setToDos(newToDos);
+        await saveToDos(newToDos);
+      }
+    }]);
+    return;
   }
 
   useEffect(() => {
@@ -70,6 +82,9 @@ export default function App() {
               <Text style={styles.toDoText}>
                 {toDos[key].text}
               </Text>
+              <TouchableOpacity onPress={()=>deleteToDo(key)}>
+                <Text><Fontisto name="trash" size={20} color={theme.toDoTrash}></Fontisto></Text>
+              </TouchableOpacity>
             </View>
             : null)}
       </ScrollView>
@@ -101,11 +116,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   toDo: {
-    backgroundColor: theme.grey,
+    backgroundColor: theme.toDoBg,
     marginBottom: 10,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    borderRadius:15,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent:"space-between",
   },
   toDoText: {
     color: "white",
